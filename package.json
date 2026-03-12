@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Telegram userbot that monitors a user's online status and sends notifications + daily reports",
   "main": "index.js",
-  // "type": "module",   ← REMOVE or COMMENT this line
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js"
