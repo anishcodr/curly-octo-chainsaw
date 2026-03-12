@@ -122,7 +122,11 @@ async function pollUserStatus() {
     if (nowOnline && !isOnline) {
       isOnline = true;
       onlineStartTime = Date.now();
-      await client.sendMessage("me", { message: `🟢 ${targetUsername} ONLINE @ ${now.toLocaleString()}` });
+      const NOTIFY_CHAT_ID = "-5293139283"; // ← your group/channel ID as string
+
+await client.sendMessage(NOTIFY_CHAT_ID, {
+  message: `🟢 ${targetUsername} is NOW ONLINE!\nTime: ${now.toLocaleString()}`
+});
       console.log("🟢 ONLINE");
     } else if (!nowOnline && isOnline) {
       isOnline = false;
