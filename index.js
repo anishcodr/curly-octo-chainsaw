@@ -1,6 +1,6 @@
 // index.js
 // Telegram Online Status Monitor (gram.js userbot)
-// Sends notifications to the specified group: -1003720691412
+// Sends online/offline notifications ONLY to @getwet_exe personal chat
 // Designed for Render.com FREE tier + external pinger recommended
 
 const { TelegramClient, Api } = require("telegram");
@@ -15,14 +15,14 @@ const fs = require("fs");
 
 const PORT = process.env.PORT || 3000;
 
-// Required env variables (set them in Render dashboard!)
+// Required env variables (set in Render dashboard!)
 const apiId          = Number(process.env.API_ID);
 const apiHash        = process.env.API_HASH;
 const sessionString  = process.env.STRING_SESSION;
 const targetUsername = process.env.TARGET_USERNAME;   // e.g. "@Humanityabove" or "123456789"
 
-// Where ALL notifications & reports go
-const NOTIFY_CHAT_ID = "-1003720691412";   // ← your group/supergroup ID
+// Where notifications go → personal chat of this user
+const NOTIFY_USERNAME = "@getwet_exe";   // ← all messages go here
 
 const DATA_FILE      = path.join(__dirname, "onlineData.json");
 const POLL_INTERVAL  = 15000; // 15 seconds
@@ -46,7 +46,7 @@ if (!targetUsername) {
 }
 
 console.log(`Monitoring target: ${targetUsername}`);
-console.log(`Notifications sent to chat ID: ${NOTIFY_CHAT_ID}`);
+console.log(`Notifications will be sent to: ${NOTIFY_USERNAME}`);
 
 // ────────────────────────────────────────────────
 // Data persistence
@@ -146,7 +146,7 @@ async function pollUserStatus() {
 
     ensureDayData(today);
 
-    // Handle day rollover
+    // Handle day rollover with open session
     if (currentDay && currentDay !== today && onlineStartTime) {
       const durationMs = Date.now() - onlineStartTime;
       const hours = (durationMs / 3600000).toFixed(2);
@@ -169,11 +169,11 @@ async function pollUserStatus() {
       isOnline = true;
       onlineStartTime = Date.now();
 
-      await client.sendMessage(NOTIFY_CHAT_ID, {
+      await client.sendMessage(NOTIFY_USERNAME, {
         message: `🟢 ${targetUsername} is NOW ONLINE!\n${now.toLocaleString()}`,
       });
 
-      console.log(`🟢 ${targetUsername} ONLINE`);
+      console.log(`🟢 ${targetUsername} ONLINE → notified ${NOTIFY_USERNAME}`);
     } else if (!nowOnline && isOnline) {
       // → OFFLINE
       isOnline = false;
@@ -192,11 +192,11 @@ async function pollUserStatus() {
       onlineData[today].totalHours += Number(hours);
       saveData();
 
-      await client.sendMessage(NOTIFY_CHAT_ID, {
+      await client.sendMessage(NOTIFY_USERNAME, {
         message: `🔴 ${targetUsername} went OFFLINE\nOnline for: ${hours} h\nEnded: ${offlineTime.toLocaleString()}`,
       });
 
-      console.log(`🔴 ${targetUsername} OFFLINE after ${hours}h`);
+      console.log(`🔴 ${targetUsername} OFFLINE after ${hours}h → notified ${NOTIFY_USERNAME}`);
       onlineStartTime = null;
     }
   } catch (err) {
@@ -229,8 +229,8 @@ async function pollUserStatus() {
     if (now.getHours() === 0 && now.getMinutes() < 5) {
       const yesterday = getDayKey(new Date(Date.now() - 86400000));
       const data = onlineData[yesterday] || { totalHours: 0 };
-      await client.sendMessage(NOTIFY_CHAT_ID, {
-        message: `📊 Yesterday (${yesterday}) report:\n${data.totalHours.toFixed(2)} hours online`,
+      await client.sendMessage(NOTIFY_USERNAME, {
+        message: `📊 Yesterday (${yesterday}) report for ${targetUsername}:\n${data.totalHours.toFixed(2)} hours online`,
       });
     }
   }, 300000); // every 5 min
